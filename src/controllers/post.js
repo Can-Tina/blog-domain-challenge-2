@@ -1,3 +1,4 @@
+const { use } = require('../routers/post');
 const prisma = require('../utils/prisma');
 
 const createPost = async (req, res) => {
@@ -39,14 +40,95 @@ const createPost = async (req, res) => {
         }
     });
 
-    res.json({ data: {...createdPost, category: createdCat } });
+    res.json({ data: { ...createdPost, category: createdCat } });
 }
 
 const getPosts = async (req, res) => {
-    const posts = await prisma.post.findMany({
-        
-    })
-    res.json({ data: posts })
+    if (req.query.number === undefined && req.query.user === undefined && req.query.order === undefined) {
+        console.log("Getting all posts")
+        const posts = await prisma.post.findMany({
+            include: {
+                categories: true,
+                comments: true
+            }
+        })
+
+        res.json({ data: posts })
+    } else if (req.query.number) {
+        console.log("Getting a number of posts")
+        const number = parseInt(req.query.number)
+        const posts = await prisma.post.findMany({
+            take: number,
+            include: {
+                categories: true,
+                comments: true
+            }
+        })
+
+        res.json({ data: posts })
+    } else if (req.query.user) {
+        const user = req.query.user
+        if (isNaN(user) === true) {
+            console.log("Getting posts by username")
+            const posts = await prisma.post.findMany({
+                where: {
+                    user: {
+                        username: user
+                    }
+                },
+                include: {
+                    categories: true,
+                    comments: true
+                }
+            })
+    
+            res.json({ data: posts })
+        } else {
+            console.log("Getting posts by id")
+            const userId = parseInt(user)
+            const posts = await prisma.post.findMany({
+                where: {
+                    user: {
+                        id: userId
+                    }
+                },
+                include: {
+                    categories: true,
+                    comments: true
+                }
+            })
+    
+            res.json({ data: posts })
+        }
+    } else if (req.query.order) {
+        console.log("Getting and ordering posts")
+        const order = req.query.order
+        if (order === "recent") {
+            const posts = await prisma.post.findMany({
+                orderBy: {
+                    updatedAt: 'desc'
+                },
+                include: {
+                    categories: true,
+                    comments: true
+                }
+            })
+    
+            res.json({ data: posts })
+        } else if (order === "oldest") {
+            const posts = await prisma.post.findMany({
+                orderBy: {
+                    updatedAt: 'asc'
+                },
+                include: {
+                    categories: true,
+                    comments: true
+                }
+            })
+    
+            res.json({ data: posts })
+        }
+    }
 }
 
 module.exports = {
