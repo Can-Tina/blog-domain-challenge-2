@@ -42,6 +42,14 @@ const createPost = async (req, res) => {
     res.json({ data: {...createdPost, category: createdCat } });
 }
 
+const getPosts = async (req, res) => {
+    const posts = await prisma.post.findMany({
+        
+    })
+    res.json({ data: posts })
+}
+
 module.exports = {
-    createPost
+    createPost,
+    getPosts
 };

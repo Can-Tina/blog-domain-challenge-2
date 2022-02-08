@@ -12,6 +12,9 @@ app.use('/user', userRouter)
 const postRouter = require('./routers/post');
 app.use('/post', postRouter)
 
+const commentRouter = require('./routers/comment');
+app.use('/comment', commentRouter)
+
 app.get('*', (req, res) => {
     res.json({ ok: true });
 });
