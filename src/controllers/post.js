@@ -44,7 +44,7 @@ const createPost = async (req, res) => {
 }
 
 const getPosts = async (req, res) => {
-    if (req.query.number === undefined && req.query.user === undefined && req.query.order === undefined) {
+    if (!req.query.number && !req.query.user && !req.query.order) {
         console.log("Getting all posts")
         const posts = await prisma.post.findMany({
             include: {
@@ -131,7 +131,97 @@ const getPosts = async (req, res) => {
     }
 }
 
+const updatePost = async (req, res) => {
+    const postId = parseInt(req.params.id)
+    const {
+        title,
+        content,
+        imageUrl,
+        name
+    } = req.body;
+
+    if (title) {
+        const updatedPost = await prisma.post.update({
+            where: {
+                id: postId
+            },
+            data: {
+                title
+            },
+            include: {
+                user: true
+            }
+        })
+
+        res.json({ data: updatedPost });
+    } else if (content) {
+        const updatedPost = await prisma.post.update({
+            where: {
+                id: postId
+            },
+            data: {
+                content
+            },
+            include: {
+                user: true
+            }
+        })
+
+        res.json({ data: updatedPost });
+    } else if (imageUrl) {
+        const updatedPost = await prisma.post.update({
+            where: {
+                id: postId
+            },
+            data: {
+                imageUrl
+            },
+            include: {
+                user: true
+            }
+        })
+
+        res.json({ data: updatedPost });
+    } else if (name) {
+        const updatedPost = await prisma.post.update({
+            where: {
+                id: postId
+            },
+            data: {
+                categories: {
+                    disconnect: true,
+                    connect: {
+                        name
+                    }
+                }
+            },
+            include: {
+                user: true
+            }
+        })
+
+        res.json({ data: updatedPost });
+
+        /*const updatedCat = await prisma.post.update({
+            where: {
+                id: updatedPost.id
+            },
+            data: {
+                categories: {
+                    update: {
+                        name
+                    }
+                }
+            }
+        });
+
+        res.json({ data: { ...updatedPost, category: updatedCat } });*/
+
+    } 
+}
+
 module.exports = {
     createPost,
-    getPosts
+    getPosts,
+    updatePost
 };
