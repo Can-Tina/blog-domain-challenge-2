@@ -48,7 +48,45 @@ const updateUser = async (req, res) => {
         pictureUrl
     } = req.body;
 
-    if (username) {
+    let dataInfo = {}
+
+    if(username) {
+        dataInfo.username = username
+    }
+    if(email) {
+        dataInfo.email = email
+    }
+    if(password) {
+        dataInfo.password = password
+    }
+    if(firstName) {
+        dataInfo.firstName = firstName
+    }
+    if(lastName) {
+        dataInfo.lastName = lastName
+    }
+    if(age) {
+        dataInfo.age = age
+    }
+    if(pictureUrl) {
+        dataInfo.pictureUrl = pictureUrl
+    }
+
+    const reqParam = {
+        where: {
+            id: userId
+        },
+        data: {
+            ...dataInfo
+        },
+        include: {
+            profile: true
+        }
+    }
+    const updatedUser = await prisma.user.update(reqParam)
+    res.json({ data: updatedUser });
+
+    /*if (username) {
         const updatedUser = await prisma.user.update({
             where: {
                 id: userId
@@ -162,10 +200,31 @@ const updateUser = async (req, res) => {
         })
 
         res.json({ data: updatedUser });
-    } 
+    }*/
+}
+
+const deleteUser = async (req, res) => {
+    const userDeleteId = parseInt(req.params.id)
+    const relevantComments = await prisma.comment.deleteMany({
+        where: {
+            userId: userDeleteId
+        }
+    })
+    const relevantPosts = await prisma.post.deleteMany({
+        where: {
+            userId: userDeleteId
+        }
+    })
+    const deletedUser = await prisma.user.delete({
+        where: {
+            id: userDeleteId
+        }
+    })
+    res.json("User Deleted")
 }
 
 module.exports = {
     createUser,
-    updateUser
+    updateUser,
+    deleteUser
 };

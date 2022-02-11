@@ -15,32 +15,21 @@ const createPost = async (req, res) => {
             title,
             content,
             imageUrl,
-            userId
-        },
-        include: {
             user: {
-                include: {
-                    profile: true
+                connect: {
+                    id: userId
                 }
-            }
-        }
-    });
-
-    const createdCat = await prisma.post.update({
-        where: {
-            id: createdPost.id
-        },
-        data: {
+            },
             categories: {
                 connectOrCreate: {
                     where: { name },
                     create: { name }
                 }
             }
-        }
+        },
     });
 
-    res.json({ data: { ...createdPost, category: createdCat } });
+    res.json({ data: createdPost });
 }
 
 const getPosts = async (req, res) => {
@@ -140,7 +129,37 @@ const updatePost = async (req, res) => {
         name
     } = req.body;
 
+    let dataInfo = {}
+
     if (title) {
+        dataInfo.title = title
+    }
+    if (content) {
+        dataInfo.content = content
+    }
+    if (imageUrl) {
+        dataInfo.imageUrl = imageUrl
+    }
+    if (name) {
+        dataInfo.name = name
+    }
+
+    const reqParam = {
+        where: {
+                id: postId
+            },
+            data: {
+                ...dataInfo
+            },
+            include: {
+                user: true
+            }
+    }
+
+    const updatedPost = await prisma.post.update(reqParam)
+    res.json({ data: updatedPost });
+
+    /*if (title) {
         const updatedPost = await prisma.post.update({
             where: {
                 id: postId
@@ -201,27 +220,28 @@ const updatePost = async (req, res) => {
         })
 
         res.json({ data: updatedPost });
+    }*/
+}
 
-        /*const updatedCat = await prisma.post.update({
-            where: {
-                id: updatedPost.id
-            },
-            data: {
-                categories: {
-                    update: {
-                        name
-                    }
-                }
-            }
-        });
-
-        res.json({ data: { ...updatedPost, category: updatedCat } });*/
-
-    } 
+const deletePost = async (req, res) => {
+    const postDeleteId = parseInt(req.params.id)
+    console.log("delId: ", postDeleteId)
+    const relevantComments = await prisma.comment.deleteMany({
+        where: {
+            postId: postDeleteId
+        }
+    })
+    const deletedPost = await prisma.post.delete({
+        where: {
+            id: postDeleteId
+        }
+    })
+    res.json("Post Deleted")
 }
 
 module.exports = {
     createPost,
     getPosts,
-    updatePost
+    updatePost,
+    deletePost
 };

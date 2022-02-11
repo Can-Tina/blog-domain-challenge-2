@@ -47,7 +47,34 @@ const updateComment = async (req, res) => {
     res.json({ data: updatedComment });
 }
 
+const deleteComment = async (req, res) => {
+    const commentId = parseInt(req.params.id)
+    const childComments = await prisma.comment.findMany({
+        where: {
+            parentId: commentId
+        }
+    })
+    if (childComments.length > 0) {
+        const deletedComment = await prisma.comment.update({
+            where: {
+                id: commentId
+            },
+            data: {
+                content: "[REMOVED]"
+            }
+        })
+    } else {
+        const deletedComment = await prisma.comment.delete({
+            where: {
+                id: commentId
+            }
+        })
+    }
+    res.json("Comment Deleted")
+}
+
 module.exports = {
     createComment,
-    updateComment
+    updateComment,
+    deleteComment
 };
